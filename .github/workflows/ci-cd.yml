@@ -8,8 +8,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_BACKEND: ${{ github.repository }}/backend
-  IMAGE_FRONTEND: ${{ github.repository }}/frontend
+  IMAGE_BACKEND: ghcr.io/vikassharma2707/sap-analytics-chatbot/backend
+  IMAGE_FRONTEND: ghcr.io/vikassharma2707/sap-analytics-chatbot/frontend
 
 jobs:
   # ─── Backend Tests ──────────────────────────────────────────────────────────
@@ -93,7 +93,7 @@ jobs:
           context: ./backend
           file: ./infrastructure/docker/Dockerfile.backend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_BACKEND }}:latest
+          tags: ${{ env.IMAGE_BACKEND }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -103,7 +103,7 @@ jobs:
           context: ./frontend
           file: ./infrastructure/docker/Dockerfile.frontend
           push: true
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_FRONTEND }}:latest
+          tags: ${{ env.IMAGE_FRONTEND }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
