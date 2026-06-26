@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
 import { Bot, User, Download, ChevronDown, ChevronUp, Lightbulb, TrendingUp, AlertTriangle } from 'lucide-react';
-import type { Message, ExportFormat } from '@/types';
+import type { Message, ExportFormat, InsightData } from '@/types';
 import { ChartRenderer } from '@/components/charts/ChartRenderer';
 import { KPICards } from '@/components/dashboard/KPICards';
 import { DataTable } from '@/components/dashboard/DataTable';
@@ -15,6 +15,11 @@ import toast from 'react-hot-toast';
 interface Props {
   message: Message;
   onFollowUp: (question: string) => void;
+}
+
+function insightToRecord(insight: InsightData | undefined): Record<string, unknown> {
+  if (!insight) return {};
+  return insight as unknown as Record<string, unknown>;
 }
 
 export function ChatMessage({ message, onFollowUp }: Props) {
@@ -35,7 +40,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
         title,
         result.analytics.records,
         result.analytics.kpis,
-        result.insights as Record<string, unknown> || {}
+        insightToRecord(result.insights)
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -120,7 +125,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
                 {result.insights.summary && (
                   <p className="text-sm text-gray-200 leading-relaxed">{result.insights.summary}</p>
                 )}
-                {result.insights.key_insights?.length > 0 && (
+                {(result.insights.key_insights?.length ?? 0) > 0 && (
                   <div className="space-y-1.5">
                     {result.insights.key_insights.map((insight, i) => (
                       <div key={i} className="flex gap-2 text-sm text-gray-300">
@@ -132,7 +137,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
                 )}
                 {(result.insights.alerts?.length ?? 0) > 0 && (
                   <div className="space-y-1.5 pt-1 border-t border-gray-700">
-                    {result.insights.alerts!.map((alert, i) => (
+                    {(result.insights.alerts ?? []).map((alert, i) => (
                       <div key={i} className="flex gap-2 text-sm text-amber-300">
                         <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
                         <span>{alert}</span>
@@ -140,7 +145,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
                     ))}
                   </div>
                 )}
-                {result.insights.recommendations?.length > 0 && (
+                {(result.insights.recommendations?.length ?? 0) > 0 && (
                   <div className="space-y-1.5 pt-1 border-t border-gray-700">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Recommendations</p>
                     {result.insights.recommendations.map((rec, i) => (
@@ -192,7 +197,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
             )}
 
             {/* Follow-up Suggestions */}
-            {result.followup_questions?.length > 0 && (
+            {(result.followup_questions?.length ?? 0) > 0 && (
               <div className="flex flex-wrap gap-2">
                 <span className="text-xs text-gray-500 self-center">Ask:</span>
                 {result.followup_questions.map((q, i) => (
