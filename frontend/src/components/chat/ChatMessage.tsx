@@ -5,7 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { motion } from 'framer-motion';
 import { Bot, User, Download, ChevronDown, ChevronUp, Lightbulb, TrendingUp, AlertTriangle } from 'lucide-react';
-import type { Message, ExportFormat, InsightData } from '@/types';
+import type { Message, ExportFormat } from '@/types';
 import { ChartRenderer } from '@/components/charts/ChartRenderer';
 import { KPICards } from '@/components/dashboard/KPICards';
 import { DataTable } from '@/components/dashboard/DataTable';
@@ -15,11 +15,6 @@ import toast from 'react-hot-toast';
 interface Props {
   message: Message;
   onFollowUp: (question: string) => void;
-}
-
-function insightToRecord(insight: InsightData | undefined): Record<string, unknown> {
-  if (!insight) return {};
-  return insight as unknown as Record<string, unknown>;
 }
 
 export function ChatMessage({ message, onFollowUp }: Props) {
@@ -40,7 +35,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
         title,
         result.analytics.records,
         result.analytics.kpis,
-        insightToRecord(result.insights)
+        result.insights ?? {}
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
