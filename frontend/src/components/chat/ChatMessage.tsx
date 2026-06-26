@@ -35,7 +35,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
         title,
         result.analytics.records,
         result.analytics.kpis,
-        result.insights ?? {}
+        result.insights
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -50,6 +50,9 @@ export function ChatMessage({ message, onFollowUp }: Props) {
       setExporting(null);
     }
   };
+
+  const insights = result?.insights ?? null;
+  const alerts: string[] = insights?.alerts ?? [];
 
   return (
     <motion.div
@@ -115,17 +118,14 @@ export function ChatMessage({ message, onFollowUp }: Props) {
             )}
 
             {/* Insights */}
-            {result.insights && (() => {
-              const ins = result.insights;
-              const alerts: string[] = ins.alerts ?? [];
-              return (
+            {insights && (
               <div className="bg-gray-800 rounded-xl border border-gray-700 p-4 space-y-3">
-                {ins.summary && (
-                  <p className="text-sm text-gray-200 leading-relaxed">{ins.summary}</p>
+                {insights.summary && (
+                  <p className="text-sm text-gray-200 leading-relaxed">{insights.summary}</p>
                 )}
-                {ins.key_insights.length > 0 && (
+                {insights.key_insights.length > 0 && (
                   <div className="space-y-1.5">
-                    {ins.key_insights.map((insight, i) => (
+                    {insights.key_insights.map((insight, i) => (
                       <div key={i} className="flex gap-2 text-sm text-gray-300">
                         <TrendingUp size={14} className="text-green-400 mt-0.5 flex-shrink-0" />
                         <span>{insight}</span>
@@ -143,10 +143,10 @@ export function ChatMessage({ message, onFollowUp }: Props) {
                     ))}
                   </div>
                 )}
-                {ins.recommendations.length > 0 && (
+                {insights.recommendations.length > 0 && (
                   <div className="space-y-1.5 pt-1 border-t border-gray-700">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Recommendations</p>
-                    {ins.recommendations.map((rec, i) => (
+                    {insights.recommendations.map((rec, i) => (
                       <div key={i} className="flex gap-2 text-sm text-blue-300">
                         <Lightbulb size={14} className="mt-0.5 flex-shrink-0" />
                         <span>{rec}</span>
@@ -155,8 +155,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
                   </div>
                 )}
               </div>
-              );
-            })()}
+            )}
 
             {/* Data Table Toggle */}
             {result.analytics?.records && result.analytics.records.length > 0 && (
@@ -196,7 +195,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
             )}
 
             {/* Follow-up Suggestions */}
-            {(result.followup_questions?.length ?? 0) > 0 && (
+            {result.followup_questions.length > 0 && (
               <div className="flex flex-wrap gap-2">
                 <span className="text-xs text-gray-500 self-center">Ask:</span>
                 {result.followup_questions.map((q, i) => (

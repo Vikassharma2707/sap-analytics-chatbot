@@ -42,7 +42,8 @@ export const chatApi = {
     title: string,
     records: Record<string, unknown>[],
     kpis: Record<string, unknown>,
-    insights: object
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    insights: any
   ): Promise<Blob> => {
     const { data } = await apiClient.post(
       '/chat/export',
