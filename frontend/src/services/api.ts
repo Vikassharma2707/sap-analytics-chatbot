@@ -42,7 +42,7 @@ export const chatApi = {
     title: string,
     records: Record<string, unknown>[],
     kpis: Record<string, unknown>,
-    insights: Record<string, unknown>
+    insights: object
   ): Promise<Blob> => {
     const { data } = await apiClient.post(
       '/chat/export',
