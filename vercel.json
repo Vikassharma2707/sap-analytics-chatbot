@@ -10,7 +10,9 @@
       "use": "@vercel/python",
       "config": {
         "maxLambdaSize": "50mb",
-        "runtime": "python3.12"
+        "runtime": "python3.12",
+        "maxDuration": 300,
+        "memory": 1024
       }
     }
   ],
@@ -30,11 +32,5 @@
   ],
   "env": {
     "PYTHONPATH": "/var/task/api"
-  },
-  "functions": {
-    "api/index.py": {
-      "maxDuration": 300,
-      "memory": 1024
-    }
   }
 }
