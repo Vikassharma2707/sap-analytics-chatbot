@@ -35,7 +35,7 @@ export function ChatMessage({ message, onFollowUp }: Props) {
         title,
         result.analytics.records,
         result.analytics.kpis,
-        result.insights ?? {}
+        (result.insights ?? {}) as Record<string, unknown>
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -130,9 +130,9 @@ export function ChatMessage({ message, onFollowUp }: Props) {
                     ))}
                   </div>
                 )}
-                {(result.insights.alerts?.length ?? 0) > 0 && (
+                {result.insights.alerts && result.insights.alerts.length > 0 && (
                   <div className="space-y-1.5 pt-1 border-t border-gray-700">
-                    {(result.insights.alerts ?? []).map((alert, i) => (
+                    {result.insights.alerts.map((alert, i) => (
                       <div key={i} className="flex gap-2 text-sm text-amber-300">
                         <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
                         <span>{alert}</span>
