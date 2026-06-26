@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { PipelineResult, SuggestionCategory, ExportFormat, InsightData } from '@/types';
+import type { PipelineResult, SuggestionCategory, ExportFormat } from '@/types';
 
 // On Vercel the backend is co-deployed at /api/v1 (same origin — no CORS issues).
 // Locally it proxies to FastAPI on :8000.
@@ -42,7 +42,7 @@ export const chatApi = {
     title: string,
     records: Record<string, unknown>[],
     kpis: Record<string, unknown>,
-    insights: InsightData | Record<string, unknown>
+    insights: Record<string, unknown>
   ): Promise<Blob> => {
     const { data } = await apiClient.post(
       '/chat/export',

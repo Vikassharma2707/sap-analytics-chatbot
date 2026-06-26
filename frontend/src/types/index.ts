@@ -53,6 +53,7 @@ export interface InsightData {
   recommendations: string[];
   alerts?: string[];
   root_causes?: string[];
+  [key: string]: unknown;
 }
 
 export interface EChartsOption {
