@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSettingsStore } from '@/store/settingsStore';
 import { SettingsPage } from '@/components/settings/SettingsPage';
 
@@ -21,7 +22,11 @@ const Dot = ({ active, ping }: { active?: boolean; ping?: boolean }) => (
 export function SapConnectionPanel() {
   const [refreshing, setRefreshing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { system, connection, odataServices, cdsViews } = useSettingsStore();
+
+  // Portal requires document to be available
+  useEffect(() => { setMounted(true); }, []);
 
   const isConnected = connection.state === 'connected';
   const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -34,9 +39,16 @@ export function SapConnectionPanel() {
     ? cdsViews.filter((v) => v.selected)
     : null;
 
+  const openSettings = () => setShowSettings(true);
+  const closeSettings = () => setShowSettings(false);
+
   return (
     <>
-      {showSettings && <SettingsPage onClose={() => setShowSettings(false)} />}
+      {/* Render modal at document.body level so overflow:hidden on aside cannot clip it */}
+      {mounted && showSettings && createPortal(
+        <SettingsPage onClose={closeSettings} />,
+        document.body
+      )}
 
       <aside style={{
         width: 280, flexShrink: 0,
@@ -45,9 +57,9 @@ export function SapConnectionPanel() {
         display: 'flex', flexDirection: 'column',
         height: '100%', overflow: 'hidden',
       }}>
-        {/* Settings button — always visible at top */}
+        {/* Settings button — pinned at top */}
         <div style={{ padding: '10px 12px', borderBottom: '1px solid #1e3a5f', flexShrink: 0 }}>
-          <button onClick={() => setShowSettings(true)}
+          <button onClick={openSettings}
             style={{
               width: '100%', padding: '10px 0',
               background: '#1a5fb4', border: '1px solid #4a9eff',
@@ -58,25 +70,24 @@ export function SapConnectionPanel() {
           </button>
         </div>
 
-        {/* SAP System info */}
+        {/* Clickable SAP connection card */}
         <div style={{ padding: 16, borderBottom: '1px solid #1e3a5f', flexShrink: 0 }}>
           <p style={{ color: '#4a9eff', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>
             SAP Backend Connection
           </p>
           <div
-            onClick={() => setShowSettings(true)}
+            onClick={openSettings}
             title="Click to configure SAP connection"
             style={{
               background: '#0a1628', border: '1px solid #1e3a5f', borderRadius: 12, padding: 12,
-              cursor: 'pointer', transition: 'border-color 0.15s',
+              cursor: 'pointer',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#4a9eff')}
             onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1e3a5f')}
           >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{
-                width: 40, height: 40, borderRadius: 8,
-                background: '#1e3a5f',
+                width: 40, height: 40, borderRadius: 8, background: '#1e3a5f',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, fontSize: 20,
               }}>☁️</div>
@@ -100,8 +111,8 @@ export function SapConnectionPanel() {
                 </p>
               </div>
             </div>
-            <p style={{ color: '#4a6080', fontSize: 10, margin: '8px 0 0', textAlign: 'center' }}>
-              🔧 Click to configure connection
+            <p style={{ color: '#3a5070', fontSize: 10, margin: '8px 0 0', textAlign: 'center' }}>
+              🔧 Click to configure
             </p>
           </div>
           <p style={{ color: '#7a9cc4', fontSize: 11, marginTop: 8 }}>
@@ -109,9 +120,8 @@ export function SapConnectionPanel() {
           </p>
         </div>
 
-        {/* API / CDS list */}
+        {/* Scrollable API / CDS list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
-          {/* OData Services */}
           <p style={{ color: '#4a9eff', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
             OData Services {displayServices ? `(${displayServices.length} active)` : '(default)'}
           </p>
@@ -136,7 +146,6 @@ export function SapConnectionPanel() {
             ))}
           </div>
 
-          {/* CDS Views */}
           {(displayCds && displayCds.length > 0) && (
             <>
               <p style={{ color: '#4a9eff', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
@@ -166,7 +175,7 @@ export function SapConnectionPanel() {
           )}
         </div>
 
-        {/* Footer — Refresh */}
+        {/* Footer */}
         <div style={{ padding: 12, borderTop: '1px solid #1e3a5f', flexShrink: 0 }}>
           <button
             onClick={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1500); }}
@@ -186,14 +195,14 @@ export function SapConnectionPanel() {
 }
 
 const DEFAULT_APIS = [
-  { name: 'API_BILLING_SRV',      title: 'Billing Document',   active: true  },
-  { name: 'API_SALESORDER_SRV',   title: 'Sales Order',        active: true  },
-  { name: 'API_CUSTOMER_SRV',     title: 'Customer Master',    active: true  },
-  { name: 'API_MATERIAL_SRV',     title: 'Material Master',    active: true  },
-  { name: 'API_PURCHASEORDER_SRV',title: 'Purchase Order',     active: true  },
-  { name: 'API_SUPPLIER_SRV',     title: 'Supplier Master',    active: true  },
-  { name: 'API_MATERIALSTOCK_SRV',title: 'Material Stock',     active: true  },
-  { name: 'API_PRODUCTIONORDER_SRV',title:'Production Order',  active: false },
-  { name: 'API_GLACCOUNTLINEITEM_SRV',title:'GL Account Items',active: true  },
-  { name: 'API_JOURNALENTRY_SRV', title: 'Journal Entry',      active: false },
+  { name: 'API_BILLING_SRV',           title: 'Billing Document',  active: true  },
+  { name: 'API_SALESORDER_SRV',        title: 'Sales Order',       active: true  },
+  { name: 'API_CUSTOMER_SRV',          title: 'Customer Master',   active: true  },
+  { name: 'API_MATERIAL_SRV',          title: 'Material Master',   active: true  },
+  { name: 'API_PURCHASEORDER_SRV',     title: 'Purchase Order',    active: true  },
+  { name: 'API_SUPPLIER_SRV',          title: 'Supplier Master',   active: true  },
+  { name: 'API_MATERIALSTOCK_SRV',     title: 'Material Stock',    active: true  },
+  { name: 'API_PRODUCTIONORDER_SRV',   title: 'Production Order',  active: false },
+  { name: 'API_GLACCOUNTLINEITEM_SRV', title: 'GL Account Items',  active: true  },
+  { name: 'API_JOURNALENTRY_SRV',      title: 'Journal Entry',     active: false },
 ];
