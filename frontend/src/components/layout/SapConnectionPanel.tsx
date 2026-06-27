@@ -45,8 +45,21 @@ export function SapConnectionPanel() {
         display: 'flex', flexDirection: 'column',
         height: '100%', overflow: 'hidden',
       }}>
+        {/* Settings button — always visible at top */}
+        <div style={{ padding: '10px 12px', borderBottom: '1px solid #1e3a5f', flexShrink: 0 }}>
+          <button onClick={() => setShowSettings(true)}
+            style={{
+              width: '100%', padding: '10px 0',
+              background: '#1a5fb4', border: '1px solid #4a9eff',
+              borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+            }}>
+            ⚙️ SAP Settings
+          </button>
+        </div>
+
         {/* SAP System info */}
-        <div style={{ padding: 16, borderBottom: '1px solid #1e3a5f' }}>
+        <div style={{ padding: 16, borderBottom: '1px solid #1e3a5f', flexShrink: 0 }}>
           <p style={{ color: '#4a9eff', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>
             SAP Backend Connection
           </p>
@@ -141,17 +154,8 @@ export function SapConnectionPanel() {
           )}
         </div>
 
-        {/* Footer buttons */}
-        <div style={{ padding: 12, borderTop: '1px solid #1e3a5f', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <button onClick={() => setShowSettings(true)}
-            style={{
-              width: '100%', padding: '10px 0',
-              background: '#1a5fb4', border: '1px solid #4a9eff',
-              borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
-            ⚙️ Settings
-          </button>
+        {/* Footer — Refresh */}
+        <div style={{ padding: 12, borderTop: '1px solid #1e3a5f', flexShrink: 0 }}>
           <button
             onClick={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1500); }}
             style={{
