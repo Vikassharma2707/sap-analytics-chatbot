@@ -5,7 +5,7 @@ import structlog
 import logging
 
 from app.core.config import settings
-from app.api.routes import chat, auth
+from app.api.routes import chat, auth, sap
 
 # Configure structured logging
 structlog.configure(
@@ -46,6 +46,7 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(chat.router, prefix=settings.API_V1_STR)
+app.include_router(sap.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/health")

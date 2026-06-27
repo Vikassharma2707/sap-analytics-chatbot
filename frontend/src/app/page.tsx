@@ -5,6 +5,7 @@ import { BitsHeader } from '@/components/layout/BitsHeader';
 import { SapConnectionPanel } from '@/components/layout/SapConnectionPanel';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import { useChatStore } from '@/store/chatStore';
+import { useSettingsStore } from '@/store/settingsStore';
 import { chatApi } from '@/services/api';
 import toast, { Toaster } from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
@@ -19,6 +20,7 @@ const QUICK_PROMPTS = [
 
 export default function Home() {
   const { getActiveMessages, isLoading, setLoading, activeConversationId, createConversation } = useChatStore();
+  const { system, connection } = useSettingsStore();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messages = getActiveMessages();
@@ -189,7 +191,14 @@ export default function Home() {
             padding: '8px 20px', fontSize: 11, color: '#4a6080', flexShrink: 0,
           }}>
             <span>© 2025 BITS Pilani WILP. All rights reserved.</span>
-            <span>Powered by SAP S/4 HANA &nbsp;|&nbsp; Built with <span style={{ color: '#ef4444' }}>♥</span> for Analytics</span>
+            <span>
+              System: <strong style={{ color: '#4a9eff' }}>{system.sid}</strong> | Client: <strong style={{ color: '#4a9eff' }}>{system.client}</strong>
+              &nbsp;&nbsp;
+              <span style={{ color: connection.state === 'connected' ? '#4ade80' : '#f87171' }}>
+                ● {connection.state === 'connected' ? 'Connected' : 'Not Connected'}
+              </span>
+              &nbsp;|&nbsp; Built with <span style={{ color: '#ef4444' }}>♥</span> for Analytics
+            </span>
           </footer>
         </main>
       </div>
