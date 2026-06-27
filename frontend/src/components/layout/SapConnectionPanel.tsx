@@ -63,7 +63,16 @@ export function SapConnectionPanel() {
           <p style={{ color: '#4a9eff', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 12 }}>
             SAP Backend Connection
           </p>
-          <div style={{ background: '#0a1628', border: '1px solid #1e3a5f', borderRadius: 12, padding: 12 }}>
+          <div
+            onClick={() => setShowSettings(true)}
+            title="Click to configure SAP connection"
+            style={{
+              background: '#0a1628', border: '1px solid #1e3a5f', borderRadius: 12, padding: 12,
+              cursor: 'pointer', transition: 'border-color 0.15s',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#4a9eff')}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1e3a5f')}
+          >
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
               <div style={{
                 width: 40, height: 40, borderRadius: 8,
@@ -91,6 +100,9 @@ export function SapConnectionPanel() {
                 </p>
               </div>
             </div>
+            <p style={{ color: '#4a6080', fontSize: 10, margin: '8px 0 0', textAlign: 'center' }}>
+              🔧 Click to configure connection
+            </p>
           </div>
           <p style={{ color: '#7a9cc4', fontSize: 11, marginTop: 8 }}>
             🔄 {connection.lastChecked ? `Last checked: ${connection.lastChecked}` : `Now: ${now}`}
