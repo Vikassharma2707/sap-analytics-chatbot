@@ -3,42 +3,49 @@
 import React, { useState } from 'react';
 import { RefreshCw, Cloud, FileText } from 'lucide-react';
 
+const C = {
+  panel:  '#0d1f35',
+  deep:   '#0a1628',
+  border: '#1e3a5f',
+  border2:'#2a4f7a',
+  accent: '#4a9eff',
+  text:   '#7a9cc4',
+  hover:  '#1e3a5f',
+};
+
 const SAP_APIS = [
-  { name: 'I_BillingDocument',     path: '/sap/opu/odata/sap/API_BILLING_SRV',         active: true },
-  { name: 'I_SalesOrder',          path: '/sap/opu/odata/sap/API_SALESORDER_SRV',       active: true },
-  { name: 'I_Customer',            path: '/sap/opu/odata/sap/API_CUSTOMER_SRV',         active: true },
-  { name: 'I_Material',            path: '/sap/opu/odata/sap/API_MATERIAL_SRV',         active: true },
-  { name: 'I_PurchaseOrderAPI01',  path: '/sap/opu/odata/sap/API_PURCHASEORDER_SRV',   active: true },
-  { name: 'I_Supplier',            path: '/sap/opu/odata/sap/API_SUPPLIER_SRV',         active: true },
-  { name: 'I_MaterialStock',       path: '/sap/opu/odata/sap/API_MATERIALSTOCK_SRV',    active: true },
-  { name: 'I_ProductionOrder',     path: '/sap/opu/odata/sap/API_PRODUCTIONORDER_SRV', active: false },
-  { name: 'I_GLAccountLineItem',   path: '/sap/opu/odata/sap/API_GLACCOUNTLINEITEM_SRV',active: true },
-  { name: 'I_JournalEntry',        path: '/sap/opu/odata/sap/API_JOURNALENTRY_SRV',    active: false },
+  { name: 'I_BillingDocument',    path: '/sap/opu/odata/sap/API_BILLING_SRV',          active: true  },
+  { name: 'I_SalesOrder',         path: '/sap/opu/odata/sap/API_SALESORDER_SRV',        active: true  },
+  { name: 'I_Customer',           path: '/sap/opu/odata/sap/API_CUSTOMER_SRV',          active: true  },
+  { name: 'I_Material',           path: '/sap/opu/odata/sap/API_MATERIAL_SRV',          active: true  },
+  { name: 'I_PurchaseOrderAPI01', path: '/sap/opu/odata/sap/API_PURCHASEORDER_SRV',    active: true  },
+  { name: 'I_Supplier',           path: '/sap/opu/odata/sap/API_SUPPLIER_SRV',          active: true  },
+  { name: 'I_MaterialStock',      path: '/sap/opu/odata/sap/API_MATERIALSTOCK_SRV',     active: true  },
+  { name: 'I_ProductionOrder',    path: '/sap/opu/odata/sap/API_PRODUCTIONORDER_SRV',  active: false },
+  { name: 'I_GLAccountLineItem',  path: '/sap/opu/odata/sap/API_GLACCOUNTLINEITEM_SRV', active: true  },
+  { name: 'I_JournalEntry',       path: '/sap/opu/odata/sap/API_JOURNALENTRY_SRV',     active: false },
 ];
 
 export function SapConnectionPanel() {
   const [refreshing, setRefreshing] = useState(false);
+  const [tick, setTick] = useState(0);
   const now = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  const handleRefresh = () => {
-    setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1500);
-  };
-
   return (
-    <aside className="w-72 flex-shrink-0 bg-bits-panel border-r border-bits-border flex flex-col h-full">
+    <aside style={{ width: 280, background: C.panel, borderRight: `1px solid ${C.border}` }}
+      className="flex-shrink-0 flex flex-col h-full overflow-hidden">
 
-      {/* SAP Backend Connection */}
-      <div className="p-4 border-b border-bits-border">
-        <h2 className="text-xs font-bold text-bits-accent uppercase tracking-widest mb-3">
+      {/* Connection block */}
+      <div style={{ borderBottom: `1px solid ${C.border}` }} className="p-4">
+        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.accent }}>
           SAP Backend Connection
-        </h2>
-        <div className="bg-bits-deep border border-bits-border rounded-xl p-3">
+        </p>
+        <div style={{ background: C.deep, border: `1px solid ${C.border}`, borderRadius: 12 }} className="p-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-bits-hover flex items-center justify-center flex-shrink-0">
-              <Cloud size={20} className="text-bits-accent" />
+            <div style={{ background: C.hover, borderRadius: 8 }} className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+              <Cloud size={20} style={{ color: C.accent }} />
             </div>
-            <div className="flex-1 min-w-0">
+            <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -47,48 +54,50 @@ export function SapConnectionPanel() {
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Connected</span>
               </div>
               <p className="text-sm font-semibold text-white">SAP S/4 HANA</p>
-              <p className="text-xs text-bits-text">System: S4H_100</p>
-              <p className="text-xs text-bits-text">Client: 100</p>
+              <p className="text-xs" style={{ color: C.text }}>System: S4H_100</p>
+              <p className="text-xs" style={{ color: C.text }}>Client: 100</p>
             </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5 mt-2">
-          <RefreshCw size={11} className="text-bits-accent" />
-          <span className="text-xs text-bits-text">Last Connected: {now}</span>
+          <RefreshCw size={11} style={{ color: C.accent }} />
+          <span className="text-xs" style={{ color: C.text }}>Last Connected: {now}</span>
         </div>
       </div>
 
-      {/* API Connection Status */}
+      {/* API list */}
       <div className="flex-1 overflow-y-auto p-4">
-        <h2 className="text-xs font-bold text-bits-accent uppercase tracking-widest mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.accent }}>
           API Connection Status
-        </h2>
-        <div className="space-y-1.5">
+        </p>
+        <div className="flex flex-col gap-1.5">
           {SAP_APIS.map((api) => (
             <div key={api.name}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-bits-deep border border-bits-border hover:border-bits-border2 transition-colors">
-              <FileText size={14} className="text-bits-accent flex-shrink-0" />
-              <div className="flex-1 min-w-0">
+              style={{ background: C.deep, border: `1px solid ${C.border}`, borderRadius: 8 }}
+              className="flex items-center gap-2 px-3 py-2">
+              <FileText size={13} style={{ color: C.accent, flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <p className="text-xs font-medium text-white truncate">{api.name}</p>
-                <p className="text-xs text-bits-muted truncate">{api.path}</p>
+                <p className="text-xs truncate" style={{ color: '#3a5070', fontSize: 10 }}>{api.path}</p>
               </div>
-              <div className={`flex items-center gap-1 text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded ${
-                api.active ? 'text-emerald-400 bg-emerald-900/30' : 'text-red-400 bg-red-900/30'
-              }`}>
-                <span className="text-[8px]">●</span>
-                {api.active ? 'ACTIVE' : 'INACTIVE'}
-              </div>
+              <span style={{
+                fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 4, flexShrink: 0,
+                color: api.active ? '#4ade80' : '#f87171',
+                background: api.active ? '#052e1644' : '#2e050544',
+              }}>
+                ● {api.active ? 'ACTIVE' : 'INACTIVE'}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Refresh button */}
-      <div className="p-4 border-t border-bits-border">
+      {/* Refresh */}
+      <div style={{ borderTop: `1px solid ${C.border}` }} className="p-4">
         <button
-          onClick={handleRefresh}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-bits-border2 text-bits-accent text-sm font-medium hover:bg-bits-hover transition-colors"
-        >
+          onClick={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1500); }}
+          style={{ border: `1px solid ${C.border2}`, color: C.accent, borderRadius: 10, width: '100%' }}
+          className="flex items-center justify-center gap-2 py-2.5 text-sm font-medium hover:opacity-80 transition-opacity">
           <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
           Refresh Status
         </button>
