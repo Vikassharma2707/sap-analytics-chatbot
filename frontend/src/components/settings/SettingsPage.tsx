@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { useSettingsStore } from '@/store/settingsStore';
 import type { ODataService, CdsView } from '@/store/settingsStore';
 
-const API = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+// Use Next.js API routes directly — no Python backend required
+const SAP_API = '/api/sap';
 
 const C = {
   bg:     '#071224',
@@ -53,7 +54,7 @@ export function SettingsPage({ onClose }: Props) {
     setTesting(true);
     setConnection({ state: 'testing', message: 'Testing connection...' });
     try {
-      const res = await fetch(`${API}/sap/test-connection`, {
+      const res = await fetch(`${SAP_API}/test-connection`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -79,7 +80,7 @@ export function SettingsPage({ onClose }: Props) {
   const handleDiscover = async () => {
     setDiscovering(true);
     try {
-      const res = await fetch(`${API}/sap/discover`, {
+      const res = await fetch(`${SAP_API}/discover`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
