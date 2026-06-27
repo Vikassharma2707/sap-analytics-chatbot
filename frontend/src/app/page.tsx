@@ -112,7 +112,7 @@ export default function Home() {
 
         {/* Main content */}
         <main style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', padding: 16, gap: 12 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto', padding: 16, gap: 12 }}>
 
             {/* Chat panel */}
             <div style={{
@@ -122,7 +122,8 @@ export default function Home() {
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              flex: hasMessages ? 1 : '0 0 auto',
+              flex: hasMessages ? '1 1 0' : '0 0 auto',
+              minHeight: hasMessages ? 0 : 320,
             }}>
               {/* Section label */}
               <div style={{ borderBottom: `1px solid ${C.border}`, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -188,7 +189,7 @@ export default function Home() {
             {!hasMessages && (
               <div style={{
                 background: C.panel, border: `1px solid ${C.border}`, borderRadius: 16,
-                flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+                minHeight: 260, display: 'flex', flexDirection: 'column', overflow: 'hidden',
               }}>
                 <div style={{ borderBottom: `1px solid ${C.border}`, padding: '10px 20px', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.accent }} />
