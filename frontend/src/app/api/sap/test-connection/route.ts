@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { host, port, client, username, password, ssl_verify } = body;
+  const { host, port, client, username, password, ssl_verify, protocol = 'http' } = body;
 
   if (!host || !port || !username) {
     return NextResponse.json({ connected: false, message: 'host, port, and username are required' }, { status: 400 });
   }
 
-  const scheme = 'https';
-  const baseUrl = `${scheme}://${host}:${port}`;
+  const baseUrl = `${protocol}://${host}:${port}`;
 
   // Try SAP public ping first (no auth required)
   const pingUrl = `${baseUrl}/sap/public/ping?sap-client=${client}`;

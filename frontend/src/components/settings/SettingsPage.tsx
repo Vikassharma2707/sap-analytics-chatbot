@@ -27,7 +27,7 @@ export function SettingsPage({ onClose }: Props) {
     setOdataServices, setCdsViews, toggleOdata, toggleCds, selectAllOdata, selectAllCds } = useSettingsStore();
 
   const [form, setForm] = useState({ ...system });
-  const [activeTab, setActiveTab] = useState<'connection' | 'services' | 'cds'>('connection');
+  const [activeTab, setActiveTab] = useState<'connection' | 'services' | 'cds' | 'webgui'>('connection');
   const [discovering, setDiscovering] = useState(false);
   const [testing, setTesting] = useState(false);
 
@@ -60,7 +60,7 @@ export function SettingsPage({ onClose }: Props) {
         body: JSON.stringify({
           host: form.host, port: form.port, client: form.client,
           username: form.username, password: form.password,
-          auth_type: form.authType, ssl_verify: form.sslVerify,
+          auth_type: form.authType, ssl_verify: form.sslVerify, protocol: form.protocol,
         }),
       });
       const data = await res.json();
@@ -86,7 +86,7 @@ export function SettingsPage({ onClose }: Props) {
         body: JSON.stringify({
           host: form.host, port: form.port, client: form.client,
           username: form.username, password: form.password,
-          auth_type: form.authType, ssl_verify: form.sslVerify,
+          auth_type: form.authType, ssl_verify: form.sslVerify, protocol: form.protocol,
         }),
       });
       const data = await res.json();
@@ -120,11 +120,14 @@ export function SettingsPage({ onClose }: Props) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-      padding: '20px', overflowY: 'auto',
+      padding: activeTab === 'webgui' ? '0' : '20px', overflowY: activeTab === 'webgui' ? 'hidden' : 'auto',
     }}>
       <div style={{
-        background: C.panel, border: `1px solid ${C.border}`, borderRadius: 20,
-        width: '100%', maxWidth: 860, boxShadow: '0 24px 64px #00000088',
+        background: C.panel, border: `1px solid ${C.border}`, borderRadius: activeTab === 'webgui' ? 0 : 20,
+        width: '100%', maxWidth: activeTab === 'webgui' ? '100%' : 860,
+        height: activeTab === 'webgui' ? '100vh' : 'auto',
+        display: 'flex', flexDirection: 'column',
+        boxShadow: '0 24px 64px #00000088',
       }}>
         {/* Header */}
         <div style={{
@@ -150,6 +153,7 @@ export function SettingsPage({ onClose }: Props) {
             { id: 'connection', label: '🔌 Connection' },
             { id: 'services',   label: `📡 OData Services${odataServices.length ? ` (${selectedOdata}/${odataServices.length})` : ''}` },
             { id: 'cds',        label: `🗂 CDS Views${cdsViews.length ? ` (${selectedCds}/${cdsViews.length})` : ''}` },
+            { id: 'webgui',     label: '🖥️ WebGUI' },
           ].map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)}
               style={{
@@ -164,7 +168,7 @@ export function SettingsPage({ onClose }: Props) {
         </div>
 
         {/* Body */}
-        <div style={{ padding: 24 }}>
+        <div style={{ padding: 24, flex: activeTab === 'webgui' ? 1 : undefined, display: 'flex', flexDirection: 'column', overflow: activeTab === 'webgui' ? 'hidden' : undefined }}>
 
           {/* ── Connection tab ── */}
           {activeTab === 'connection' && (
@@ -177,6 +181,25 @@ export function SettingsPage({ onClose }: Props) {
                   {field('sid', 'System ID (SID)', 'text', 'S4H')}
                   {field('username', 'Username', 'text', 'basis')}
                   {field('password', 'Password', 'password', '••••••••')}
+                </div>
+
+                <div style={{ marginBottom: 16 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Protocol
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['http', 'https'] as const).map((p) => (
+                      <button key={p} onClick={() => setForm((f) => ({ ...f, protocol: p }))}
+                        style={{
+                          padding: '8px 20px', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          background: form.protocol === p ? C.btn : C.deep,
+                          border: `1px solid ${form.protocol === p ? C.accent : C.border2}`,
+                          color: form.protocol === p ? 'white' : C.text,
+                        }}>
+                        {p === 'http' ? '🌐 HTTP' : '🔒 HTTPS'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div style={{ marginBottom: 16 }}>
@@ -308,10 +331,45 @@ export function SettingsPage({ onClose }: Props) {
               )}
             </div>
           )}
+
+          {/* ── WebGUI tab ── */}
+          {activeTab === 'webgui' && (() => {
+            const webguiUrl = `${form.protocol}://${form.host}:${form.port}/sap/bc/gui/sap/its/webgui`;
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                {/* URL bar */}
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '8px 0 12px', borderBottom: `1px solid ${C.border}`, marginBottom: 12,
+                }}>
+                  <span style={{ fontSize: 11, color: C.muted, whiteSpace: 'nowrap' }}>URL:</span>
+                  <code style={{
+                    flex: 1, fontSize: 12, color: C.accent,
+                    background: C.deep, padding: '6px 12px', borderRadius: 6,
+                    border: `1px solid ${C.border}`, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  }}>{webguiUrl}</code>
+                  <a href={webguiUrl} target="_blank" rel="noreferrer"
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      background: C.btn, color: 'white', textDecoration: 'none', whiteSpace: 'nowrap',
+                    }}>
+                    ↗ Open in tab
+                  </a>
+                </div>
+                {/* Iframe */}
+                <iframe
+                  src={webguiUrl}
+                  style={{ flex: 1, width: '100%', border: 'none', borderRadius: 8, minHeight: 500, background: 'white' }}
+                  title="SAP WebGUI"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
+                />
+              </div>
+            );
+          })()}
         </div>
 
-        {/* Footer */}
-        <div style={{
+        {/* Footer — hidden on WebGUI tab */}
+        {activeTab !== 'webgui' && <div style={{
           display: 'flex', justifyContent: 'flex-end', gap: 12,
           padding: '16px 24px', borderTop: `1px solid ${C.border}`,
         }}>
@@ -323,7 +381,7 @@ export function SettingsPage({ onClose }: Props) {
             style={{ padding: '10px 24px', borderRadius: 8, background: C.btn, border: 'none', color: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
             💾 Save Settings
           </button>
-        </div>
+        </div>}
       </div>
     </div>
   );

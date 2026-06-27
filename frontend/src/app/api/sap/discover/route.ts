@@ -32,9 +32,9 @@ const DEFAULT_CDS = [
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { host, port, client, username, password } = body;
+  const { host, port, client, username, password, protocol = 'http' } = body;
 
-  const baseUrl = `https://${host}:${port}`;
+  const baseUrl = `${protocol}://${host}:${port}`;
   const catalogUrl = `${baseUrl}/sap/opu/odata/iwfnd/catalogservice;v=2/ServiceCollection?$format=json&$top=200`;
 
   const headers: Record<string, string> = {

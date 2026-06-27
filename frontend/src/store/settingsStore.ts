@@ -10,6 +10,7 @@ export interface SapSystemSettings {
   password: string;
   authType: 'basic' | 'oauth2';
   sslVerify: boolean;
+  protocol: 'http' | 'https';
 }
 
 export interface ODataService {
@@ -61,6 +62,7 @@ export const useSettingsStore = create<SettingsState>()(
         password: '',
         authType: 'basic',
         sslVerify: false,
+        protocol: 'http',
       },
       odataServices: [],
       cdsViews: [],

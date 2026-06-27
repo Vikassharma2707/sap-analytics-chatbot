@@ -57,16 +57,26 @@ export function SapConnectionPanel() {
         display: 'flex', flexDirection: 'column',
         height: '100%', overflow: 'hidden',
       }}>
-        {/* Settings button — pinned at top */}
-        <div style={{ padding: '10px 12px', borderBottom: '1px solid #1e3a5f', flexShrink: 0 }}>
-          <button onClick={openSettings}
+        {/* WebGUI + Settings — pinned at top */}
+        <div style={{ padding: '10px 12px', borderBottom: '1px solid #1e3a5f', flexShrink: 0, display: 'flex', gap: 8 }}>
+          <a
+            href="/webgui-launch"
+            target="_blank" rel="noreferrer"
             style={{
-              width: '100%', padding: '10px 0',
-              background: '#1a5fb4', border: '1px solid #4a9eff',
-              borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 600,
-              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              flex: 1, padding: '10px 0', textDecoration: 'none',
+              background: '#064e3b', border: '1px solid #4ade80',
+              borderRadius: 10, color: '#4ade80', fontSize: 13, fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
             }}>
-            ⚙️ SAP Settings
+            🔐 SAP Login ↗
+          </a>
+          <button onClick={openSettings} title="SAP Settings"
+            style={{
+              width: 42, background: '#1a3a6b', border: '1px solid #2a4f7a',
+              borderRadius: 10, color: '#7a9cc4', fontSize: 16,
+              cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+            ⚙️
           </button>
         </div>
 
