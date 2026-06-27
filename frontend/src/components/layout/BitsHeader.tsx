@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Clock, Calendar, ChevronDown, User } from 'lucide-react';
+import { Clock, Calendar, ChevronDown } from 'lucide-react';
 
 export function BitsHeader() {
   const [now, setNow] = useState(new Date());
@@ -15,59 +15,57 @@ export function BitsHeader() {
   const date = now.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <header className="flex items-center justify-between px-5 py-3 bg-[#0a1628] border-b border-[#1e3a5f]">
+    <header className="flex items-center justify-between px-5 py-3 bg-bits-deep border-b border-bits-border">
       {/* Left — BITS Pilani branding */}
       <div className="flex items-center gap-4">
-        {/* Logo emblem placeholder — circular gradient matching BITS colors */}
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8B1A1A] via-[#C4922A] to-[#1a3a6b]
-          flex items-center justify-center border-2 border-[#C4922A]/60 shadow-lg shadow-[#C4922A]/20 flex-shrink-0">
-          <span className="text-white text-[10px] font-bold text-center leading-tight">BITS</span>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 flex-shrink-0 shadow-lg"
+          style={{ background: 'radial-gradient(circle at 40% 40%, #8B1A1A, #C4922A 50%, #1a3a6b)', borderColor: '#C4922A66' }}>
+          <span className="text-white text-[9px] font-bold leading-tight text-center">BITS</span>
         </div>
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-white font-bold text-lg leading-none">BITS</span>
-            <span className="text-[#C4922A] font-bold text-lg leading-none">Pilani</span>
+            <span className="text-white font-bold text-xl leading-none">BITS</span>
+            <span className="font-bold text-xl leading-none text-bits-gold">Pilani</span>
           </div>
-          <p className="text-[10px] text-[#7a9cc4] leading-none mt-0.5">
+          <p className="text-[10px] text-bits-text leading-none mt-0.5">
             Pilani | Dubai | Goa | Hyderabad | Mumbai
           </p>
-          <p className="text-[9px] font-semibold text-[#C4922A] uppercase tracking-widest mt-0.5">
+          <p className="text-[9px] font-semibold text-bits-gold uppercase tracking-widest mt-0.5">
             Work Integrated Learning Programmes
           </p>
         </div>
       </div>
 
-      {/* Center — App title */}
+      {/* Center */}
       <div className="text-center">
         <h1 className="text-xl font-bold text-white tracking-wide">
           SAP S/4 HANA AI Analytics Assistant
         </h1>
-        <p className="text-sm text-[#4a9eff] font-medium mt-0.5">
+        <p className="text-sm text-bits-accent font-medium mt-0.5">
           Intelligent Insights. Real-time Decisions.
         </p>
       </div>
 
-      {/* Right — datetime + user */}
+      {/* Right */}
       <div className="flex items-center gap-5">
-        <div className="flex items-center gap-3 text-sm text-[#7a9cc4]">
+        <div className="flex items-center gap-3 text-sm text-bits-text">
           <div className="flex items-center gap-1.5">
-            <Clock size={14} className="text-[#4a9eff]" />
+            <Clock size={14} className="text-bits-accent" />
             <span className="font-mono text-white">{time}</span>
           </div>
-          <div className="w-px h-4 bg-[#1e3a5f]" />
+          <div className="w-px h-4 bg-bits-border" />
           <div className="flex items-center gap-1.5">
-            <Calendar size={14} className="text-[#4a9eff]" />
+            <Calendar size={14} className="text-bits-accent" />
             <span>{date}</span>
           </div>
         </div>
-        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-          bg-[#1e3a5f] border border-[#2a4f7a] hover:bg-[#244569] transition-colors">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-violet-500
-            flex items-center justify-center text-xs font-bold text-white">
+        <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-bits-panel border border-bits-border2 hover:bg-bits-hover transition-colors">
+          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold text-white"
+            style={{ background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)' }}>
             AD
           </div>
           <span className="text-sm text-white font-medium">Admin User</span>
-          <ChevronDown size={14} className="text-[#7a9cc4]" />
+          <ChevronDown size={14} className="text-bits-text" />
         </button>
       </div>
     </header>
