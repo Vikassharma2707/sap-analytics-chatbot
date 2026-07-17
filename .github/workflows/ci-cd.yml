@@ -1,122 +1,110 @@
-name: CI/CD Pipeline
+name: CI/CD → SAP BTP
 
+# ─── Triggers ────────────────────────────────────────────────────────────────
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main]
 
+# ─── Shared env ──────────────────────────────────────────────────────────────
 env:
-  REGISTRY: ghcr.io
-  IMAGE_BACKEND: ghcr.io/vikassharma2707/sap-analytics-chatbot/backend
-  IMAGE_FRONTEND: ghcr.io/vikassharma2707/sap-analytics-chatbot/frontend
+  NODE_VERSION: '22'
 
 jobs:
-  # ─── Backend Tests ──────────────────────────────────────────────────────────
-  backend-test:
+  # ── 1. Type-check + build ──────────────────────────────────────────────────
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: sap_chatbot_test
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: password
-        ports: ["5432:5432"]
-        options: --health-cmd="pg_isready" --health-interval=5s --health-timeout=3s --health-retries=5
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
-        options: --health-cmd="redis-cli ping" --health-interval=5s --health-timeout=3s --health-retries=5
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-          cache-dependency-path: backend/requirements.txt
 
-      - name: Install dependencies
-        run: pip install -r backend/requirements.txt pytest pytest-asyncio httpx
-
-      - name: Run tests
-        working-directory: backend
-        env:
-          DATABASE_URL: postgresql+asyncpg://postgres:password@localhost:5432/sap_chatbot_test
-          REDIS_URL: redis://localhost:6379/0
-          LLM_PROVIDER: openai
-          OPENAI_API_KEY: test-key
-          SAP_BASE_URL: http://mock-sap
-          SAP_USERNAME: test
-          SAP_PASSWORD: test
-        run: pytest tests/ -v --tb=short
-
-  # ─── Frontend Tests ──────────────────────────────────────────────────────────
-  frontend-test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-      - run: npm install
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package.json
+
+      - name: Install dependencies
         working-directory: frontend
-      - run: npm run type-check
+        run: npm ci
+
+      - name: Type-check
         working-directory: frontend
-      - run: npm run build
+        run: npm run type-check
+
+      - name: Build Next.js app
         working-directory: frontend
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+          NODE_ENV: production
+          # Add any NEXT_PUBLIC_* vars here if needed
+          # NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+        run: npm run build
 
-  # ─── Build & Push Docker Images ─────────────────────────────────────────────
-  build-push:
-    needs: [backend-test, frontend-test]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+      # Upload .next + public + package* so the deploy job can push without re-building
+      - name: Upload build artefacts
+        uses: actions/upload-artifact@v4
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          name: nextjs-build
+          path: |
+            frontend/.next/
+            frontend/public/
+            frontend/package.json
+            frontend/package-lock.json
+            frontend/manifest.yml
+            frontend/.cfignore
+            frontend/next.config.*
+            frontend/tsconfig.json
+          retention-days: 1
 
-      - name: Build and push backend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./backend
-          file: ./infrastructure/docker/Dockerfile.backend
-          push: true
-          tags: ${{ env.IMAGE_BACKEND }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push frontend
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          file: ./infrastructure/docker/Dockerfile.frontend
-          push: true
-          tags: ${{ env.IMAGE_FRONTEND }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # ─── Deploy to Production ────────────────────────────────────────────────────
+  # ── 2. Deploy to SAP BTP Cloud Foundry (main branch only) ─────────────────
   deploy:
-    needs: build-push
+    name: Deploy → BTP
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to Kubernetes
+      - name: Download build artefacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: app/
+
+      # Install CF CLI v8
+      - name: Install CF CLI
         run: |
-          echo "Apply kubectl manifests from infrastructure/k8s/"
-          # kubectl apply -f infrastructure/k8s/
+          curl -fsSL "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=v8&source=github" \
+            | tar -xz
+          sudo mv cf8 /usr/local/bin/cf
+          cf --version
+
+      # Install node_modules inside the downloaded artefact (prod + devDeps for next start)
+      - name: Install npm dependencies
+        working-directory: app
+        run: npm ci
+
+      # Log in to BTP Cloud Foundry
+      - name: CF login
+        run: |
+          cf login \
+            -a "${{ secrets.CF_API }}" \
+            -u "${{ secrets.CF_USERNAME }}" \
+            -p "${{ secrets.CF_PASSWORD }}" \
+            -o "${{ secrets.CF_ORG }}" \
+            -s "${{ secrets.CF_SPACE }}" \
+            --skip-ssl-validation
+
+      # Push — zero-downtime rolling deploy when >1 instance, simple push for 1
+      - name: CF push
+        working-directory: app
+        run: cf push --strategy rolling || cf push
+
+      # Print app URL + recent logs on failure
+      - name: Show app info
+        if: always()
+        run: |
+          cf app sap-analytics-chatbot || true
+          cf logs sap-analytics-chatbot --recent || true

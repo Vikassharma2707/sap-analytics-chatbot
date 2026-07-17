@@ -1,0 +1,16 @@
+# Don't upload these to Cloud Foundry — they are rebuilt in the pipeline
+node_modules/
+
+# Local dev artefacts
+.env.local
+.env.development.local
+.env.test.local
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test outputs
+coverage/
