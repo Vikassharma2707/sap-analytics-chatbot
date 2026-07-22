@@ -23,50 +23,14 @@ export function BitsHeader() {
       flexShrink: 0,
       minHeight: 72,
     }}>
-      {/* Left — BITS brand */}
+      {/* Left — Coforge brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-        {/* Official BITS Pilani logo */}
         <img
-          src="https://upload.wikimedia.org/wikipedia/en/d/d3/BITS_Pilani-Logo.svg"
-          alt="BITS Pilani"
-          width={56}
-          height={56}
+          src="/coforge-logo.svg"
+          alt="Coforge"
+          height={36}
           style={{ flexShrink: 0, objectFit: 'contain' }}
-          onError={(e) => {
-            const t = e.currentTarget;
-            t.style.display = 'none';
-            const fallback = t.nextElementSibling as HTMLElement;
-            if (fallback) fallback.style.display = 'flex';
-          }}
         />
-        {/* Fallback SVG emblem if image fails */}
-        <div style={{
-          width: 56, height: 56, borderRadius: '50%', flexShrink: 0, display: 'none',
-          background: 'radial-gradient(circle at 40% 35%, #8B1A1A 0%, #9B2020 30%, #C4922A 60%, #1a3a6b 100%)',
-          border: '3px solid #C4922A', boxShadow: '0 0 16px #C4922A66',
-          alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
-        }}>
-          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <circle cx="16" cy="16" r="15" stroke="#C4922A" strokeWidth="1.5" fill="none"/>
-            <text x="16" y="12" textAnchor="middle" fill="white" fontSize="5" fontWeight="bold">BITS</text>
-            <text x="16" y="20" textAnchor="middle" fill="#C4922A" fontSize="4">PILANI</text>
-            <line x1="8" y1="14" x2="24" y2="14" stroke="#C4922A" strokeWidth="0.8"/>
-          </svg>
-        </div>
-
-        {/* Text */}
-        <div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-            <span style={{ color: 'white', fontWeight: 800, fontSize: 20, lineHeight: 1 }}>BITS</span>
-            <span style={{ color: '#C4922A', fontWeight: 800, fontSize: 20, lineHeight: 1 }}>Pilani</span>
-          </div>
-          <p style={{ color: '#7a9cc4', fontSize: 10, margin: '3px 0 2px' }}>
-            Pilani | Dubai | Goa | Hyderabad | Mumbai
-          </p>
-          <p style={{ color: '#C4922A', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2 }}>
-            Work Integrated Learning Programmes
-          </p>
-        </div>
       </div>
 
       {/* Center — title */}
