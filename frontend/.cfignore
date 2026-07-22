@@ -1,6 +1,9 @@
 # Don't upload these to Cloud Foundry — they are rebuilt in the pipeline
 node_modules/
 
+# Next.js webpack cache — massive dev artefacts, not needed at runtime
+.next/cache/
+
 # Local dev artefacts
 .env.local
 .env.development.local
