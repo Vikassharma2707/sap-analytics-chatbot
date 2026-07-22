@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getXsuaaCreds } from '@/lib/btp';
 
 function appUrl(req: NextRequest) {
-  const proto = req.headers.get('x-forwarded-proto') || 'https';
-  const host  = req.headers.get('host') || 'localhost:3000';
+  if (process.env.APP_URL) return process.env.APP_URL.replace(/\/$/, '');
+  const proto = req.headers.get('x-forwarded-proto') || req.headers.get('x-forwarded-ssl') === 'on' ? 'https' : 'http';
+  const host  = req.headers.get('x-forwarded-host') || req.headers.get('host') || 'localhost:3000';
   return `${proto}://${host}`;
 }
 

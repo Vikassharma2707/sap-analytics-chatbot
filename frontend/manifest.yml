@@ -27,3 +27,4 @@ applications:
       NPM_CONFIG_PRODUCTION: false
       # Set to "true" to enforce XSUAA login on every page request
       BTP_AUTH_REQUIRED: "true"
+      APP_URL: "https://sap-analytics-chatbot.cfapps.in30.hana.ondemand.com"
