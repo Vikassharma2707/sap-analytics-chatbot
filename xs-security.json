@@ -1,0 +1,39 @@
+{
+  "xsappname": "sap-analytics-chatbot",
+  "tenant-mode": "dedicated",
+  "scopes": [
+    { "name": "$XSAPPNAME.user",  "description": "Standard application user" },
+    { "name": "$XSAPPNAME.admin", "description": "Administrator" }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "User",
+      "description": "Can access the chatbot",
+      "scope-references": ["$XSAPPNAME.user"]
+    },
+    {
+      "name": "Admin",
+      "description": "Full access including settings",
+      "scope-references": ["$XSAPPNAME.user", "$XSAPPNAME.admin"]
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "SAP Analytics Chatbot User",
+      "role-template-references": ["$XSAPPNAME.User"]
+    },
+    {
+      "name": "SAP Analytics Chatbot Admin",
+      "role-template-references": ["$XSAPPNAME.Admin"]
+    }
+  ],
+  "oauth2-configuration": {
+    "redirect-uris": [
+      "https://sap-analytics-chatbot.cfapps.in30.hana.ondemand.com/api/auth/callback",
+      "http://localhost:3000/api/auth/callback",
+      "http://localhost:3001/api/auth/callback"
+    ],
+    "autoapprove": true
+  }
+}

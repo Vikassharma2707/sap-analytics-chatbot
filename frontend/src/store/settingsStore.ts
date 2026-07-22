@@ -11,6 +11,9 @@ export interface SapSystemSettings {
   authType: 'basic' | 'oauth2';
   sslVerify: boolean;
   protocol: 'http' | 'https';
+  /** 'direct' = host:port, 'destination' = BTP Destination Service + Cloud Connector */
+  connectionMode: 'direct' | 'destination';
+  destinationName: string;
 }
 
 export interface ODataService {
@@ -63,6 +66,8 @@ export const useSettingsStore = create<SettingsState>()(
         authType: 'basic',
         sslVerify: false,
         protocol: 'http',
+        connectionMode: 'direct',
+        destinationName: 'S4HANA_SYSTEM',
       },
       odataServices: [],
       cdsViews: [],

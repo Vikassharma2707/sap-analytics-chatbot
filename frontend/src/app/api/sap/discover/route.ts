@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isOnBTP, fetchViaSapDestination } from '@/lib/btp';
 
 const DEFAULT_ODATA = [
   { name: 'API_BILLING_SRV',           path: '/sap/opu/odata/sap/API_BILLING_SRV',           title: 'Billing Document',      active: true  },
@@ -32,38 +33,48 @@ const DEFAULT_CDS = [
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { host, port, client, username, password, protocol = 'http' } = body;
+  const catalogPath = '/sap/opu/odata/iwfnd/catalogservice;v=2/ServiceCollection?$format=json&$top=200';
 
-  const baseUrl = `${protocol}://${host}:${port}`;
-  const catalogUrl = `${baseUrl}/sap/opu/odata/iwfnd/catalogservice;v=2/ServiceCollection?$format=json&$top=200`;
+  let catalogRes: Response | null = null;
 
-  const headers: Record<string, string> = {
-    'sap-client': String(client),
-    Accept: 'application/json',
-    Authorization: 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
-  };
+  // ── BTP / Cloud Connector mode ────────────────────────────────────────────
+  if (isOnBTP() || body.connectionMode === 'destination') {
+    const { destinationName = 'S4HANA_SYSTEM' } = body;
+    try {
+      catalogRes = await fetchViaSapDestination(destinationName, catalogPath, {
+        method: 'GET', headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(15_000),
+      });
+    } catch { /* use defaults */ }
+  } else {
+    // ── Direct mode ─────────────────────────────────────────────────────────
+    const { host, port, client, username, password, protocol = 'http' } = body;
+    const baseUrl = `${protocol}://${host}:${port}`;
+    try {
+      catalogRes = await fetch(`${baseUrl}${catalogPath}`, {
+        headers: {
+          'sap-client': String(client),
+          Accept: 'application/json',
+          Authorization: 'Basic ' + Buffer.from(`${username}:${password}`).toString('base64'),
+        },
+        signal: AbortSignal.timeout(12_000),
+      });
+    } catch { /* use defaults */ }
+  }
 
   let odataServices = DEFAULT_ODATA;
-
-  try {
-    const res = await fetch(catalogUrl, {
-      headers,
-      signal: AbortSignal.timeout(12000),
-    });
-    if (res.status === 200) {
-      const data = await res.json();
+  if (catalogRes?.status === 200) {
+    try {
+      const data = await catalogRes.json() as { d?: { results?: Record<string, string>[] } };
       const results = data?.d?.results ?? [];
       if (results.length > 0) {
-        odataServices = results.map((svc: Record<string, string>) => ({
-          name: svc.TechnicalServiceName,
-          path: `/sap/opu/odata/sap/${svc.TechnicalServiceName}`,
-          title: svc.ServiceDescription || svc.TechnicalServiceName,
+        odataServices = results.map((svc) => ({
+          name:   svc.TechnicalServiceName,
+          path:   `/sap/opu/odata/sap/${svc.TechnicalServiceName}`,
+          title:  svc.ServiceDescription || svc.TechnicalServiceName,
           active: true,
         }));
       }
-    }
-  } catch {
-    // use defaults
+    } catch { /* use defaults */ }
   }
 
   return NextResponse.json({ odata_services: odataServices, cds_views: DEFAULT_CDS });

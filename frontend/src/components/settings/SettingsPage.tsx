@@ -61,6 +61,7 @@ export function SettingsPage({ onClose }: Props) {
           host: form.host, port: form.port, client: form.client,
           username: form.username, password: form.password,
           auth_type: form.authType, ssl_verify: form.sslVerify, protocol: form.protocol,
+          connectionMode: form.connectionMode, destinationName: form.destinationName,
         }),
       });
       const data = await res.json();
@@ -87,6 +88,7 @@ export function SettingsPage({ onClose }: Props) {
           host: form.host, port: form.port, client: form.client,
           username: form.username, password: form.password,
           auth_type: form.authType, ssl_verify: form.sslVerify, protocol: form.protocol,
+          connectionMode: form.connectionMode, destinationName: form.destinationName,
         }),
       });
       const data = await res.json();
@@ -174,16 +176,66 @@ export function SettingsPage({ onClose }: Props) {
           {activeTab === 'connection' && (
             <div style={{ display: 'flex', gap: 24 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
-                  {field('host', 'SAP Host / IP', 'text', 'e.g. 192.168.1.100')}
-                  {field('port', 'Port', 'number', '44300')}
-                  {field('client', 'Client', 'text', '100')}
-                  {field('sid', 'System ID (SID)', 'text', 'S4H')}
-                  {field('username', 'Username', 'text', 'basis')}
-                  {field('password', 'Password', 'password', '••••••••')}
+
+                {/* Connection Mode toggle */}
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Connection Mode
+                  </label>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    {(['direct', 'destination'] as const).map((m) => (
+                      <button key={m} onClick={() => setForm((f) => ({ ...f, connectionMode: m }))}
+                        style={{
+                          flex: 1, padding: '10px 0', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+                          background: form.connectionMode === m ? C.btn : C.deep,
+                          border: `1px solid ${form.connectionMode === m ? C.accent : C.border2}`,
+                          color: form.connectionMode === m ? 'white' : C.text,
+                        }}>
+                        {m === 'direct' ? '🌐 Direct (Host / Port)' : '☁️ BTP Destination (Cloud Connector)'}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: 16 }}>
+                {/* BTP Destination fields */}
+                {form.connectionMode === 'destination' && (
+                  <div style={{ background: C.deep, border: `1px solid #2a4f7a`, borderRadius: 12, padding: 16, marginBottom: 16 }}>
+                    <p style={{ color: C.accent, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 12px' }}>
+                      ☁️ BTP Destination Configuration
+                    </p>
+                    <div style={{ marginBottom: 12 }}>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
+                        Destination Name
+                      </label>
+                      <input
+                        type="text"
+                        value={form.destinationName}
+                        onChange={(e) => setForm((f) => ({ ...f, destinationName: e.target.value }))}
+                        placeholder="e.g. S4HANA_SYSTEM"
+                        style={{ width: '100%', padding: '10px 14px', borderRadius: 8, background: C.panel, border: `1px solid ${C.border2}`, color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                      />
+                    </div>
+                    {field('client', 'SAP Client (optional override)', 'text', '100')}
+                    <p style={{ color: C.muted, fontSize: 11, margin: 0, lineHeight: 1.6 }}>
+                      The destination must be configured in BTP cockpit with URL, credentials, and ProxyType=OnPremise. Cloud Connector location must be active and connected.
+                    </p>
+                  </div>
+                )}
+
+                {/* Direct connection fields */}
+                {form.connectionMode === 'direct' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 16px' }}>
+                    {field('host', 'SAP Host / IP', 'text', 'e.g. 192.168.1.100')}
+                    {field('port', 'Port', 'number', '44300')}
+                    {field('client', 'Client', 'text', '100')}
+                    {field('sid', 'System ID (SID)', 'text', 'S4H')}
+                    {field('username', 'Username', 'text', 'basis')}
+                    {field('password', 'Password', 'password', '••••••••')}
+                  </div>
+                )}
+
+                {/* Protocol + Auth (direct mode only) */}
+                {form.connectionMode === 'direct' && <><div style={{ marginBottom: 16 }}>
                   <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>
                     Protocol
                   </label>
@@ -229,7 +281,7 @@ export function SettingsPage({ onClose }: Props) {
                   <label htmlFor="ssl" style={{ color: C.text, fontSize: 13, cursor: 'pointer' }}>
                     Verify SSL Certificate
                   </label>
-                </div>
+                </div></>}
               </div>
 
               {/* Right — status + actions */}

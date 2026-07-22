@@ -1,25 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Intercepts ALL /sap/* requests (including SAP session URLs like /sap(base64...)/bc/...)
- * before Next.js routing sees them. Next.js App Router treats parentheses as route groups
- * and can't match those URLs — middleware runs first and handles them correctly.
- */
-export async function middleware(req: NextRequest) {
+// ── Auth guard ────────────────────────────────────────────────────────────────
+// When BTP_AUTH_REQUIRED=true (set in manifest.yml env:), every page request
+// that lacks a btp_access_token cookie is redirected to /login.
+// Full JWT validation happens inside API routes via @/lib/btp — not here.
+
+const AUTH_REQUIRED = process.env.BTP_AUTH_REQUIRED === 'true';
+const PUBLIC_PREFIXES = ['/login', '/api/auth/'];
+
+function isPublic(p: string) {
+  return PUBLIC_PREFIXES.some((prefix) => p.startsWith(prefix));
+}
+
+// ── SAP WebGUI proxy ──────────────────────────────────────────────────────────
+
+async function sapProxy(req: NextRequest): Promise<NextResponse> {
   const { pathname } = req.nextUrl;
-
-  // Only intercept /sap/... and /sap(...)... paths
-  if (!pathname.startsWith('/sap')) return NextResponse.next();
-
-  // Skip if this is our own API route
   if (pathname.startsWith('/api/')) return NextResponse.next();
 
-  // Read credentials from session cookie
   const cookie = req.cookies.get('sap_proxy_creds')?.value;
   if (!cookie) {
     return new NextResponse('No SAP session — open WebGUI from the sidebar', {
-      status: 401,
-      headers: { 'content-type': 'text/plain' },
+      status: 401, headers: { 'content-type': 'text/plain' },
     });
   }
 
@@ -34,74 +36,74 @@ export async function middleware(req: NextRequest) {
   const sapBase   = `${protocol}://${host}:${port}`;
   const targetUrl = `${sapBase}${pathname}${req.nextUrl.search}`;
 
-  const forwardHeaders: Record<string, string> = {
-    Authorization:    'Basic ' + btoa(`${username}:${password}`),
-    'sap-client':     client,
-    'User-Agent':     req.headers.get('user-agent') || 'Mozilla/5.0',
-    Accept:           req.headers.get('accept')     || '*/*',
-    'Accept-Language':'en-US,en;q=0.9',
+  const fwd: Record<string, string> = {
+    Authorization:     'Basic ' + btoa(`${username}:${password}`),
+    'sap-client':      client,
+    'User-Agent':      req.headers.get('user-agent') || 'Mozilla/5.0',
+    Accept:            req.headers.get('accept')     || '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
   };
 
-  // Forward SAP session cookies (exclude our proxy cookie)
   const allCookies = req.headers.get('cookie') || '';
-  const sapCookies = allCookies
-    .split(';')
-    .filter((c) => !c.trim().startsWith('sap_proxy_creds'))
-    .join(';')
-    .trim();
-  if (sapCookies) forwardHeaders['Cookie'] = sapCookies;
+  const sapCookies = allCookies.split(';').filter((c) => !c.trim().startsWith('sap_proxy_creds')).join(';').trim();
+  if (sapCookies) fwd['Cookie'] = sapCookies;
 
   const referer = req.headers.get('referer') || '';
-  if (referer) forwardHeaders['Referer'] = referer.replace(/https?:\/\/localhost:\d+/, sapBase);
+  if (referer) fwd['Referer'] = referer.replace(/https?:\/\/[^/]+/, sapBase);
 
   const ct = req.headers.get('content-type');
-  if (ct) forwardHeaders['content-type'] = ct;
-
-  const method = req.method;
+  if (ct) fwd['content-type'] = ct;
 
   try {
-    const fetchOpts: RequestInit = {
-      method,
-      headers: forwardHeaders,
-      redirect: 'manual',
-    };
+    const opts: RequestInit = { method: req.method, headers: fwd, redirect: 'manual' };
+    if (req.method !== 'GET' && req.method !== 'HEAD') opts.body = await req.text();
 
-    if (method !== 'GET' && method !== 'HEAD') {
-      fetchOpts.body = await req.text();
-    }
+    const sapRes  = await fetch(targetUrl, opts);
+    const cType   = sapRes.headers.get('content-type') || '';
+    const body    = await sapRes.arrayBuffer();
 
-    const sapRes = await fetch(targetUrl, fetchOpts);
-    const contentType = sapRes.headers.get('content-type') || '';
-    const body = await sapRes.arrayBuffer();
-
-    const outHeaders = new Headers();
-    outHeaders.set('content-type', contentType || 'application/octet-stream');
-    outHeaders.set('x-frame-options', 'SAMEORIGIN');
-
-    // Forward SAP Set-Cookie headers to maintain the SAP session
+    const out = new Headers();
+    out.set('content-type', cType || 'application/octet-stream');
+    out.set('x-frame-options', 'SAMEORIGIN');
     sapRes.headers.forEach((v, k) => {
-      if (k.toLowerCase() === 'set-cookie') outHeaders.append('set-cookie', v);
+      if (k.toLowerCase() === 'set-cookie') out.append('set-cookie', v);
     });
 
-    // Rewrite redirects to stay on our origin
     if ([301, 302, 303, 307, 308].includes(sapRes.status)) {
       const loc = sapRes.headers.get('location') || '';
-      const newLoc = loc.startsWith('http') ? loc.replace(sapBase, '') : loc;
-      outHeaders.set('location', newLoc);
-      return new NextResponse(null, { status: sapRes.status, headers: outHeaders });
+      out.set('location', loc.startsWith('http') ? loc.replace(sapBase, '') : loc);
+      return new NextResponse(null, { status: sapRes.status, headers: out });
     }
-
-    return new NextResponse(body, { status: sapRes.status, headers: outHeaders });
-
+    return new NextResponse(body, { status: sapRes.status, headers: out });
   } catch (err) {
-    return new NextResponse(`WebGUI proxy error: ${err}`, {
-      status: 502,
-      headers: { 'content-type': 'text/plain' },
-    });
+    return new NextResponse(`WebGUI proxy error: ${err}`, { status: 502, headers: { 'content-type': 'text/plain' } });
   }
 }
 
+// ── Main ──────────────────────────────────────────────────────────────────────
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // SAP proxy intercepts /sap(…) paths before routing
+  if (pathname.startsWith('/sap')) return sapProxy(req);
+
+  // XSUAA auth guard — redirect to login if no token cookie
+  if (AUTH_REQUIRED && !isPublic(pathname)) {
+    const token = req.cookies.get('btp_access_token')?.value;
+    if (!token) {
+      const url = new URL('/login', req.url);
+      if (pathname !== '/') url.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(url);
+    }
+  }
+
+  return NextResponse.next();
+}
+
 export const config = {
-  // Regex matches /sap/... AND /sap(...)... (SAP session-encoded URLs with parentheses)
-  matcher: ['/(sap.*)'],
+  matcher: [
+    '/(sap.*)',                                             // SAP proxy (incl. session URLs with parens)
+    '/((?!_next/static|_next/image|favicon.ico|coforge-logo.svg).*)', // Auth guard
+  ],
 };

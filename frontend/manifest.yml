@@ -10,7 +10,20 @@ applications:
     health-check-type: http
     health-check-http-endpoint: /
     timeout: 120
+
+    # ── Service bindings ──────────────────────────────────────────────────────
+    # Create these service instances in BTP cockpit before deploying:
+    #   cf create-service xsuaa application sap-analytics-xsuaa -c xs-security.json
+    #   cf create-service connectivity lite sap-analytics-connectivity
+    #   cf create-service destination lite sap-analytics-destination
+    services:
+      - sap-analytics-xsuaa
+      - sap-analytics-connectivity
+      - sap-analytics-destination
+
     env:
       NODE_ENV: production
       NODE_OPTIONS: --max-old-space-size=400
-      NPM_CONFIG_PRODUCTION: false   # keep devDependencies so `next start` works
+      NPM_CONFIG_PRODUCTION: false
+      # Set to "true" to enforce XSUAA login on every page request
+      BTP_AUTH_REQUIRED: "true"
